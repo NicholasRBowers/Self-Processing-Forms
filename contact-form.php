@@ -10,7 +10,7 @@
 			$businessName = 'Example Business Name';
 			$businessWebsite = 'http://example.com';
 			$businessFacebook = 'http://www.facebook.com/ExampleURL';
-			$businessEmail = 'info@example.com'; // The verification email to the customer comes from this address.  The customer can also reply to this address.
+			$businessEmail = 'nicholas.ryan.bowers@gmail.com'; // The verification email to the customer comes from this address.  The customer can also reply to this address.
 
 		do { // This do-while(0) loop allows us to break out of it's loop with the break command, without terminating the rest of the page's rendering of HTML.
 
@@ -24,7 +24,7 @@
 						$emailBodyVerification = "Thank you for contacting $businessName! This is an automatically generated email to verify that we have received your information. A copy of your information is included below. We will contact you as soon as possible to answer your questions or address your concerns. In the meantime, please visit our Facebook ($businessFacebook) and website ($businessWebsite) to see what's new at $businessName! Have a great day!\n\n";
 
 					// Validation - expected data must exist
-						if($_POST['name'] == '' || $_POST['phone'] == '') { // Place required form information here
+						if(!isRequired('name', 'phone')) { // Place required form information here
 							failed('*Not all required information was filled out.');
 							break; // Break out of do-while(0) loop;
 						}
@@ -107,6 +107,17 @@
 		} while (0);
 
 		// Function definitions - must be defined non-conditionally in order to be able to be defined after said functions are called.
+
+			function isRequired() { // Checks to see if required POST data from form is provided. Takes unlimited parameters.
+				$fields = func_get_args();
+				foreach ($fields as $i) {
+					if($_POST[$i] == '' || !isset($_POST[$i])) {
+						return false;
+					}
+				}
+				return true;
+			}
+
 			function prepareString($string) { // Prepares the $string for processing by the script
 				$newString = stripslashes($string);
 				$newString = trim($newString);
