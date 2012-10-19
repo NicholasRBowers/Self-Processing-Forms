@@ -1,37 +1,94 @@
 <div id="contactdynamic">
 	<?php
 
-		/* NOTES:
-			*Find a way to incorporate storing (encrypted?) user contact information in MySQL databases.
+		/* GOALS & NOTES:
+			*Find a way to incorporate storing (encrypted?) of collected user contact information in MySQL databases.
 			*Required fields are stored within a global array, but it's only used in one function so far.
-			*Let's store all fields in a global array as well, so we can automate the email building based on the forms that are present.
+			*Store all fields in a global array as well, so we can automate the email building based on the forms that are present.
+			*Moved the "Email contact configuration" to circa line 30 (global) for ease of use. Had these variables only conditionally defined if the form needed processing for better performace, but it decreased the user experience. Suggestions?
+			*Would prefer to define many configuration variables locally in the first IF statement to improve page-rendering performance, but not sure how to do that without making the code look complicated and overwhelming.
 		*/
 
-		// Configuration variables for business
-			$businessName = 'Example Business Name';
-			$businessWebsite = 'http://example.com';
-			$businessFacebook = 'http://www.facebook.com/ExampleURL';
-			$businessEmail = 'info@example.com'; // The verification email to the customer comes from this address.  The customer can also reply to this address.
+		// SETTINGS ==========================================
+			// Contact form configuration:
+				$fields = array( // Which fields do you want the contact form to include?
+					'Name' => 'name',
+					'Phone Number' => 'phone',
+					'Email Address' => 'email', // NOTE: RIGHT NOW THIS SECTION DOES NOTHING.
+					'Source' => 'source',
+					'Message' => 'message',
+				);
+				$requiredFields = array('Name', 'Phone Number'); // Which of the previous fields do you wish to be required?
+				// NOTE: RIGHT NOW THIS SECTION DOES NOTHING - Array is overwritten when the isRequired function is called.
+
+			// Business information configuration:
+				$businessName = 'Example Business Name';
+				$businessWebsite = 'http://example.com';
+				$businessFacebook = 'http://www.facebook.com/ExampleURL';
+				$businessEmail = 'info@example.com'; // The verification message to the customer comes from this address.
+				$canReply = true; // This setting allows the customer to reply to this email address.
+
+			// Email contact configuration:
+				$contactEmails = 'info@example.com, boss@example.com'; // The customer's message is sent to these email addresses.
+				$emailSubjectInformation = $businessName.'\'s Contact Form Information';
+				$emailSubjectVerification = $businessName.'\'s Contact Form Verification';
+				$emailBodyVerification = "Thank you for contacting $businessName! This is an automatically generated email to verify that we have received your information. A copy of your information is included below. We will contact you as soon as possible to answer your questions or address your concerns. In the meantime, please visit our Facebook ($businessFacebook) and website ($businessWebsite) to see what's new at $businessName! Have a great day!\n\n";
+
+			// Default webpage content
+				function defaultContent() { ?>
+					<h2>
+						Contact <? echo $businessName ?>
+					</h2>
+					<p>
+						You can use the information below to contact <strong><em><? echo $businessName ?></em></strong> to find out more information about what we do, or to receive a free estimate on a project you may want to get started on. Our project specialists are ready to help you.
+					</p>
+					<?
+				}
+
+			// Success webpage content
+				function successContent() {
+					global $businessFacebook, $businessName; ?>
+					<h2>
+						Success!
+					</h2>
+					<p>
+						Your information has been sent! We will contact you as soon as possible. If you provided an email, a verification email has been sent containing the information you submitted.
+					</p>
+					<p>
+						While you wait for us to contact you to answer your questions, address your conerns, or give you a free estimate, please take a second to check out our <a href="<? echo $businessFacebook; ?>" target="blank">Facebook</a> to see what's new at <? echo $businessName; ?>!
+					</p>
+					<?
+				}
+
+			// Failure webpage content
+				function failureContent($errors='We\'re sorry for the inconvenience. Please try again.') { ?>
+					<h2>
+						Oops... Something went wrong!
+					</h2>
+					<p>
+						We are very sorry, but there seems to be error(s) in the information you've provided below. Please fix these errors and resubmit the form. Thanks!
+					</p>
+					<h3>
+						Error(s):
+					</h3>
+					<p>
+						<? echo $errors; ?>
+					</p>
+					<?
+				}
+		//====================================================
 
 		// Global variables
-			$fields = array(); // If we set the total desired fields here, we can automate the entire page construction.  This would have to be an associative array, however, so we could have reference names for display.
-			$requiredFields = array(); // Perhaps set the required fields here instead of in the isRequired function.
 			$errorMessage = '';
 
-		do { // This do-while(0) loop allows us to break out of it's loop with the break command, without terminating the rest of the page's rendering of HTML.
+		do { // This do-while(0) loop allows us to break out of its loop with the break command, without terminating the rest of the page's rendering of HTML.
 
 			// Check to see if the information from the form needs to be processed.
 				if(isset($_POST['submit'])) { // Process the contact form.
 
-					// Configuration variables for email contact
-						$contactEmails = 'info@example.com, boss@example.com'; // The customer's email goes to these email addresses.
-						$emailSubjectInformation = $businessName.'\'s Contact Form Information';
-						$emailSubjectVerification = $businessName.'\'s Contact Form Verification';
-						$emailBodyVerification = "Thank you for contacting $businessName! This is an automatically generated email to verify that we have received your information. A copy of your information is included below. We will contact you as soon as possible to answer your questions or address your concerns. In the meantime, please visit our Facebook ($businessFacebook) and website ($businessWebsite) to see what's new at $businessName! Have a great day!\n\n";
-
 					// Validation - expected data must exist
 						if(!isRequired('name', 'phone')) { // Place required form information here; unlimited parameters are accepted.
-							failed($errorMessage);
+							failureContent($errorMessage);
 							break; // Break out of do-while(0) loop;
 						}
 
@@ -59,7 +116,7 @@
 							$errorMessage .= '*You didn\'t tell us how we can help you.<br />';
 						}
 						if (strlen($errorMessage) > 0) {
-							failed($errorMessage);
+							failureContent($errorMessage);
 							break; // Break out of do-while(0) loop.
 						}
 
@@ -92,22 +149,16 @@
 
 					// Writes dynamic content to the webpage
 						if ($informationSuccess) {
-							success();
+							successContent();
 						} else {
-							failed('*E-mail failed to send, please check your email address and try again.');
+							failureContent('*E-mail failed to send, please check your email address and try again.');
 						}
-				} else { /* Writes the default content to the webpage */ ?>
-					<h2>
-						Contact <? echo $businessName ?>
-					</h2>
-					<p>
-						You can use the information below to contact <strong><em><? echo $businessName ?></em></strong> to find out more information about what we do, or to receive a free estimate on a project you may want to get started on. Our project specialists are ready to help you.
-					</p>
-				<? }
+				} else { /* Writes the default content to the webpage */
+					defaultContent();
+				}
 		} while (0);
 
-		// Function definitions - must be defined non-conditionally in order to be able to be defined after said functions are called.
-
+		// Helper functions
 			function isRequired() { // Checks to see if required POST data from form is provided. Takes unlimited parameters.
 				global $errorMessage, $requiredFields;
 				$notSet = false;
@@ -188,36 +239,6 @@
 					return false;
 				}
 				return true;
-			}
-
-			function success() { /* Writes success content to the webpage */
-				global $businessFacebook, $businessName; ?>
-				<h2>
-					Success!
-				</h2>
-				<p>
-					Your information has been sent! We will contact you as soon as possible. If you provided an email, a verification email has been sent containing the information you submitted.
-				</p>
-				<p>
-					While you wait for us to contact you to answer your questions, address your conerns, or give you a free estimate, please take a second to check out our <a href="<? echo $businessFacebook; ?>" target="blank">Facebook</a> to see what's new at <? echo $businessName; ?>!
-				</p>
-				<?
-			}
-
-			function failed($errors) { /* Writes failure content to the webpage */ ?>
-				<h2>
-					Oops... Something went wrong!
-				</h2>
-				<p>
-					We are very sorry, but there seems to be errors in the information you've provided below. Please fix these errors and resubmit the form. Thanks!
-				</p>
-				<h3>
-					Errors:
-				</h3>
-				<p>
-					<? echo $errors; ?>
-				</p>
-				<?
 			}
 	?>
 </div>
