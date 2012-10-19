@@ -2,7 +2,6 @@ Self-Aware-PHP-Form
 ===================
 Original Author: **@NicholasRBowers**
 
-
 *A PHP contact form that processes itself.  That's right, one file.*
 
 **OBJECTIVE**:  To create a self-referential PHP-driven contact form for websites (and quite possibly, a WordPress plugin based on the same logic).
