@@ -3,14 +3,20 @@
 
 		/* NOTES:
 			*Find a way to incorporate storing (encrypted?) user contact information in MySQL databases.
-			*Put backend PHP files on the level above the web root (only if they have sensitive information in them, this is not the case here).
+			*Required fields are stored within a global array, but it's only used in one function so far.
+			*Let's store all fields in a global array as well, so we can automate the email building based on the forms that are present.
 		*/
 
 		// Configuration variables for business
 			$businessName = 'Example Business Name';
 			$businessWebsite = 'http://example.com';
 			$businessFacebook = 'http://www.facebook.com/ExampleURL';
-			$businessEmail = 'nicholas.ryan.bowers@gmail.com'; // The verification email to the customer comes from this address.  The customer can also reply to this address.
+			$businessEmail = 'info@example.com'; // The verification email to the customer comes from this address.  The customer can also reply to this address.
+
+		// Global variables
+			$fields = array(); // If we set the total desired fields here, we can automate the entire page construction.  This would have to be an associative array, however, so we could have reference names for display.
+			$requiredFields = array(); // Perhaps set the required fields here instead of in the isRequired function.
+			$errorMessage = '';
 
 		do { // This do-while(0) loop allows us to break out of it's loop with the break command, without terminating the rest of the page's rendering of HTML.
 
@@ -24,8 +30,8 @@
 						$emailBodyVerification = "Thank you for contacting $businessName! This is an automatically generated email to verify that we have received your information. A copy of your information is included below. We will contact you as soon as possible to answer your questions or address your concerns. In the meantime, please visit our Facebook ($businessFacebook) and website ($businessWebsite) to see what's new at $businessName! Have a great day!\n\n";
 
 					// Validation - expected data must exist
-						if(!isRequired('name', 'phone')) { // Place required form information here
-							failed('*Not all required information was filled out.');
+						if(!isRequired('name', 'phone')) { // Place required form information here; unlimited parameters are accepted.
+							failed($errorMessage);
 							break; // Break out of do-while(0) loop;
 						}
 
@@ -37,23 +43,17 @@
 						$inputSource = titleCase(prepareString($_POST['source']));
 						$inputMessage = prepareString($_POST['message']);
 
-					// Validation - Data must adhere to expected characters
-						$errorMessage = '';
-						$expectedEmail = '/^[\_]*([a-z0-9]+(\.|\_*)?)+@([a-z][a-z0-9\-]+(\.|\-*\.))+[a-z]{2,6}$/';
+					// Validation - Data must adhere to expected characters (REGEX)
 						$expectedName = '/^[A-Za-z\.\'-]{2,}([\s][A-Za-z\.\'-]{2,})+$/';
-						$expectedNumbers = '/^(\+?1[\-\. ]?)?\(?[2-9][0-8][0-9][\)\-\. ]?[0-9]{3}[\-\. ]?[0-9]{4}$/';
+						$expectedPhone = '/^(\+?1[\-\. ]?)?\(?[2-9][0-8][0-9][\)\-\. ]?[0-9]{3}[\-\. ]?[0-9]{4}$/';
+						$expectedEmail = '/^[\_]*([a-z0-9]+(\.|\_*)?)+@([a-z][a-z0-9\-]+(\.|\-*\.))+[a-z]{2,6}$/';
 
 						// Testing the formats of the inputs
-						if (strlen($inputEmail) > 0) {
-							if (!filter_var($inputEmail, FILTER_VALIDATE_EMAIL) || !preg_match($expectedEmail,$inputEmail)) {
-								$errorMessage .= '*The email address you entered does not appear to be valid.<br />';
-							}
-						}
-						if (!preg_match($expectedName,$inputName)) {
-							$errorMessage .= '*The name you entered does not appear to be valid.<br />';
-						}
-						if (!preg_match($expectedNumbers,$inputPhone)) {
-							$errorMessage .= '*The phone number you entered does not appear to be valid.<br />';
+						regexValidation($inputName, $expectedName, 'name');
+						regexValidation($inputPhone, $expectedPhone, 'phone number');
+						$emailValidation = regexValidation($inputEmail, $expectedEmail, 'email address');
+						if($emailValidation === true && !filter_var($inputEmail, FILTER_VALIDATE_EMAIL)) { // Built-in fallback check.
+							$errorMessage .= '*The email address you entered does not appear to be valid.<br />';
 						}
 						if (strlen($inputMessage) < 3) {
 							$errorMessage .= '*You didn\'t tell us how we can help you.<br />';
@@ -109,13 +109,16 @@
 		// Function definitions - must be defined non-conditionally in order to be able to be defined after said functions are called.
 
 			function isRequired() { // Checks to see if required POST data from form is provided. Takes unlimited parameters.
-				$fields = func_get_args();
-				foreach ($fields as $i) {
+				global $errorMessage, $requiredFields;
+				$notSet = false;
+				$requiredFields = func_get_args();
+				foreach ($requiredFields as $i) {
 					if($_POST[$i] == '' || !isset($_POST[$i])) {
-						return false;
+						$errorMessage .= "*The $i field (required) wasn't filled out.<br />";
+						$notSet = true;
 					}
 				}
-				return true;
+				return ($notSet === true) ? false : true;
 			}
 
 			function prepareString($string) { // Prepares the $string for processing by the script
@@ -176,6 +179,15 @@
 				   $newString .= $string_array[$k];
 				}
 				return($newString);
+			}
+
+			function regexValidation($input, $expected, $referenceName) { // Tests to see if entered fields adhere to expected formats.  NOTE:  Required fields already exist, so we don't have to check for required state.
+				global $errorMessage;
+				if(strlen($input) > 0 && !preg_match($expected, $input)) {
+					$errorMessage .= "*The $referenceName you entered does not appear to be valid.<br />";
+					return false;
+				}
+				return true;
 			}
 
 			function success() { /* Writes success content to the webpage */
