@@ -2,34 +2,32 @@
 
   /* GOALS & NOTES:
     *Find a way to incorporate storing (encrypted?) of collected user contact information in MySQL databases.
-    *Required fields are stored within a global array, but it's only used in one function so far.
-    *Store all fields in a global array as well, so we can automate the email building based on the forms that are present.
     *Would prefer to define many configuration variables locally in the first IF statement to improve page-rendering performance, but not sure how to do that without making the code look complicated and overwhelming.
-    *Eliminated breaking in and out of PHP into HTML.  Save configuration content and HTML as variables, and later utilize to echo variables to DOM.
+    *Currently using IDs as hooks to style contact forms via CSS. Is this best practice?
+    *Need to make the validation area dynamic now, considering that the forms are now variable.
   */
 
-  // Global variables
-    $errorMessage = '';
-    $content = '<div id="contactdynamic">';
 
   // SETTINGS ==========================================
     // Contact form configuration:
-      $fields = array( // Which fields do you want the contact form to include?
-        'Name' => 'name',
-        'Phone Number' => 'phone',
-        'Email Address' => 'email', // NOTE: RIGHT NOW THIS SECTION IS LEFT UNIMPLEMENTED.
-        'Source' => 'source',
-        'Message' => 'message',
+      $formTitle = 'Free Estimate/Information Request Form';
+      $inputFields = array(
+        // Which fields do you want the contact form to include?
+        // FORMAT: array(referenceKey, Display Name, fieldType, isRequired?),
+        array('name', 'Name', 'text', true),
+        array('phone', 'Phone Number', 'text', true),
+        array('email', 'Email Address', 'text', false),
+        array('source', 'Source', 'text', false),
+        array('message', 'How can we help you?', 'textarea', true),
       );
-      $requiredFields = array('Name', 'Phone Number'); // Which of the previous fields do you wish to be required?
-      // NOTE: RIGHT NOW THIS SECTION DOES NOTHING - Array is overwritten when the isRequired function is called.
+      $resetButton = false;
 
     // Business information configuration:
       $businessName = 'Example Business Name';
       $businessWebsite = 'http://example.com';
       $businessFacebook = 'http://www.facebook.com/ExampleURL';
       $businessEmail = 'info@example.com'; // The verification message to the customer comes from this address.
-      $canReply = true; // This setting allows the customer to reply to this email address. CURRENTLY UNIMPLMENTED.
+      $canReply = true; // UNIMPLEMENTED - This setting allows the customer to reply to this email address.
 
     // Email contact configuration:
       $contactEmails = 'info@example.com, boss@example.com'; // The customer's message is sent to these email addresses.
@@ -37,7 +35,7 @@
       $emailSubjectVerification = "$businessName's Contact Form Verification";
       $emailBodyVerification = "Thank you for contacting $businessName! This is an automatically generated email to verify that we have received your information. A copy of your information is included below. We will contact you as soon as possible to answer your questions or address your concerns. In the meantime, please visit our Facebook ($businessFacebook) and website ($businessWebsite) to see what's new at $businessName! Have a great day!\n\n";
 
-    // Default webpage content
+    // Default dynamic content
       $defaultContent = "
         <h2>
           Contact $businessName
@@ -46,7 +44,7 @@
           You can use the information below to contact <strong><em>$businessName</em></strong> to find out more information about what we do, or to receive a free estimate on a project you may want to get started on. Our project specialists are ready to help you.
         </p>";
 
-    // Success webpage content
+    // Success dynamic content
       $successContent = "
         <h2>
           Success!
@@ -58,7 +56,7 @@
           While you wait for us to contact you to answer your questions, address your concerns, or give you a free estimate, please take a second to check out our <a href=\"$businessFacebook\" target=\"blank\">Facebook</a> to see what's new at $businessName!
         </p>";
 
-    // Failure webpage content
+    // Failure dynamic content
       function failureContent($errors='We\'re sorry for the inconvenience. Please try again.') {
         $failureContent = "
         <h2>
@@ -76,47 +74,69 @@
         return $failureContent;
       }
 
-    // Contact form
-      $contactForm = "
+  //====================================================
+
+
+  // Initialization
+    $content = '<div id="contactdynamic">';
+    $errorMessage = '';
+    $generatedForms = '';
+    $requiredFields = array();
+
+  // Contact form generation
+    for ($i = 0; $i < sizeof($inputFields); $i++) {
+      if ($inputFields[$i][3] === true) {
+        $inputFields[$i][1] .= '*'; // Append an "*" to the end of a required field name,
+        array_push($requiredFields, $inputFields[$i][0]); // And add the required field to the requiredFields array.
+      }
+      if ($inputFields[$i][2] === 'textarea') { // Code the fields properly in HTML.
+        $generatedForms .= "
+          <label for=\"{$inputFields[$i][0]}\">{$inputFields[$i][1]}</label>
+          <textarea name=\"{$inputFields[$i][0]}\" rows=\"5\" cols=\"20\" /></textarea>
+          ";
+      } else {
+        $generatedForms .= "
+          <label for=\"{$inputFields[$i][0]}\">{$inputFields[$i][1]}</label>
+          <input name=\"{$inputFields[$i][0]}\" type=\"text\" />
+          ";
+      }
+    }
+    $generatedForms .= "
+      <input name=\"submit\" value=\"Submit\" id=\"submit\" type=\"submit\" />";
+    if ($resetButton === true) {
+      $generatedForms .= "
+      <input name=\"reset\" value=\"Clear\" id=\"reset\" type=\"reset\" />";
+    }
+    $contactForm = "
 
       <div id=\"contactform\">
         <h3>
-          Free Estimate/Information Request Form:
+          $formTitle
         </h3>
         <form method=\"post\" action=\"{$_SERVER['PHP_SELF']}\">
-          <label for=\"name\">Name*:</label>
-          <input id=\"name\" type=\"text\" name=\"name\" />
-
-          <label for=\"phone\">Phone Number*:</label>
-          <input id=\"phone\" type=\"text\" name=\"phone\" />
-
-          <label for=\"email\">E-mail:</label>
-          <input id=\"email\" type=\"text\" name=\"email\" />
-
-          <label for=\"message\">How can WE help you?</label>
-          <textarea name=\"message\" rows=\"5\" cols=\"20\" id=\"message\"></textarea>
-
-          <label for=\"source\">How did you hear about us?</label>
-          <input id=\"source\" type=\"text\" name=\"source\" />
-
-          <input type=\"submit\" name=\"submit\" value=\"Submit\" id=\"submit\" />
+          $generatedForms
         </form>
       </div>";
 
-  //====================================================
-
   do { // This do-while(0) loop allows us to break out of its loop with the break command, without terminating the rest of the page's rendering of HTML.
 
-    // Check to see if the information from the form needs to be processed.
+    // Information processing - check to see if the information from the form needs to be processed.
       if(isset($_POST['submit'])) { // Process the contact form.
 
         // Validation - expected data must exist
-          if(!isRequired('name', 'phone')) { // Place required form information here; unlimited parameters are accepted.
-            $content .= failureContent($errorMessage);
-            break; // Break out of do-while(0) loop;
+          if (sizeof($requiredFields) > 0) { // If there are required fields:
+            foreach ($requiredFields as $i) { // Cycle through them,
+              if($_POST[$i] == '' || !isset($_POST[$i])) { // If any are blank or unset:
+                $errorMessage .= "*The $i field (required) wasn't filled out.<br />"; // Append corresponding error message.
+              }
+            }
+            if (strlen($errorMessage) > 0) { // If there is an error message to be displayed:
+              $content .= failureContent($errorMessage); // Add the failure content to the page,
+              break; // And break out of do-while(0) loop;
+            }
           }
 
-        // Formatting and storing the data from the fields in variables
+        // Formatting and storing the data from the fields in variables - THIS NEEDS TO BE DYNAMIC.
           $inputName = titleCase(prepareString($_POST['name']));
           $inputPhone = prepareString($_POST['phone']);
           $inputEmail = strtolower(prepareString($_POST['email']));
@@ -124,12 +144,12 @@
           $inputSource = titleCase(prepareString($_POST['source']));
           $inputMessage = prepareString($_POST['message']);
 
-        // Validation - Data must adhere to expected characters (REGEX)
+        // Validation - Data must adhere to expected characters (REGEX) - NEED TO ADD MORE COMMON SETS OF REGEX VALIDATION.
           $expectedName = '/^[A-Za-z\.\'-]{2,}([\s][A-Za-z\.\'-]{2,})+$/';
           $expectedPhone = '/^(\+?1[\-\. ]?)?\(?[2-9][0-8][0-9][\)\-\. ]?[0-9]{3}[\-\. ]?[0-9]{4}$/';
           $expectedEmail = '/^[\_]*([a-z0-9]+(\.|\_*)?)+@([a-z][a-z0-9\-]+(\.|\-*\.))+[a-z]{2,6}$/';
 
-          // Testing the formats of the inputs
+          // Testing the formats of the inputs - THIS NEEDS TO BE DYNAMIC.
           regexValidation($inputName, $expectedName, 'name');
           regexValidation($inputPhone, $expectedPhone, 'phone number');
           $emailValidation = regexValidation($inputEmail, $expectedEmail, 'email address');
@@ -185,23 +205,11 @@
   $content .= "
     </div>
     ";
-  $content .= $contactForm; // Appends the $contactForm variable to the page content.
-  echo $content; // Echoes the completed content to the DOM.
+  $content .= $contactForm;
+  echo $content;
+
 
   // Helper functions
-    function isRequired() { // Checks to see if required POST data from form is provided. Takes unlimited parameters.
-      global $errorMessage, $requiredFields;
-      $notSet = false;
-      $requiredFields = func_get_args();
-      foreach ($requiredFields as $i) {
-        if($_POST[$i] == '' || !isset($_POST[$i])) {
-          $errorMessage .= "*The $i field (required) wasn't filled out.<br />";
-          $notSet = true;
-        }
-      }
-      return ($notSet === true) ? false : true;
-    }
-
     function prepareString($string) { // Prepares the $string for processing by the script
       $newString = stripslashes($string);
       $newString = trim($newString);
@@ -211,61 +219,61 @@
     }
 
     function titleCase($string) { // Converts $string into title case using multiple rules
-       //remove no_parse content
-       $string_array = preg_split("/(<no_parse>|<\/no_parse>)+/i",$string);
-       $newString = '';
-       for ($k=0; $k<count($string_array); $k=$k+2) {
-         $string = $string_array[$k];
-         //if the entire string is upper case dont perform any title case on it
-         if ($string != strtoupper($string)) {
-          //TITLE CASE RULES:
-          //1.) uppercase the first char in every word
-            $new = preg_replace("/(^|\s|\'|'|\"|-){1}([a-z]){1}/ie","''.stripslashes('\\1').''.stripslashes(strtoupper('\\2')).''", $string);
-            //2.) lower case words exempt from title case
-            // Lowercase all articles, coordinate conjunctions ("and", "or", "nor"), and prepositions regardless of length, when they are other than the first or last word.
-          // Lowercase the "to" in an infinitive." - this rule is of course aproximated since it is contex sensitive
-            $matches = array();
-            // perform recusive matching on the following words
-            preg_match_all("/(\sof|\sa|\san|\sthe|\sbut|\sor|\snot|\syet|\sat|\son|\sin|\sover|\sabove|\sunder|\sbelow|\sbehind|\snext\sto|\sbeside|\sby|\samoung|\sbetween|\sby|\still|\ssince|\sdurring|\sfor|\sthroughout|\sto|\sand){2}/i",$new ,$matches);
-          for ($i=0; $i<count($matches); $i++) {
-            for ($j=0; $j<count($matches[$i]); $j++) {
-              $new = preg_replace("/(".$matches[$i][$j]."\s)/ise","''.strtolower('\\1').''",$new);
+      //remove no_parse content
+        $string_array = preg_split("/(<no_parse>|<\/no_parse>)+/i",$string);
+        $newString = '';
+        for ($k=0; $k<count($string_array); $k=$k+2) {
+          $string = $string_array[$k];
+          //if the entire string is upper case dont perform any title case on it
+            if ($string != strtoupper($string)) {
+              //TITLE CASE RULES:
+                //1.) uppercase the first char in every word
+                  $new = preg_replace("/(^|\s|\'|'|\"|-){1}([a-z]){1}/ie","''.stripslashes('\\1').''.stripslashes(strtoupper('\\2')).''", $string);
+                //2.) lower case words exempt from title case
+                  // Lowercase all articles, coordinate conjunctions ("and", "or", "nor"), and prepositions regardless of length, when they are other than the first or last word.
+                  // Lowercase the "to" in an infinitive." - this rule is of course aproximated since it is contex sensitive
+                  $matches = array();
+                  // perform recusive matching on the following words
+                  preg_match_all("/(\sof|\sa|\san|\sthe|\sbut|\sor|\snot|\syet|\sat|\son|\sin|\sover|\sabove|\sunder|\sbelow|\sbehind|\snext\sto|\sbeside|\sby|\samoung|\sbetween|\sby|\still|\ssince|\sdurring|\sfor|\sthroughout|\sto|\sand){2}/i",$new ,$matches);
+                  for ($i=0; $i<count($matches); $i++) {
+                    for ($j=0; $j<count($matches[$i]); $j++) {
+                      $new = preg_replace("/(".$matches[$i][$j]."\s)/ise","''.strtolower('\\1').''",$new);
+                    }
+                  }
+                //3.) do not allow upper case appostraphies
+                  $new = preg_replace("/(\w'S)/ie","''.strtolower('\\1').''",$new);
+                  $new = preg_replace("/(\w'\w)/ie","''.strtolower('\\1').''",$new);
+                  $new = preg_replace("/(\W)(of|a|an|the|but|or|not|yet|at|on|in|over|above|under|below|behind|next to| beside|by|amoung|between|by|till|since|durring|for|throughout|to|and)(\W)/ise","'\\1'.strtolower('\\2').'\\3'",$new);
+                //4.) capitalize first letter in the string always
+                  $new = preg_replace("/(^[a-z]){1}/ie","''.strtoupper('\\1').''", $new);
+                //5.) replace special cases
+                  // you will add to this as you find case specific problems
+                  $new = preg_replace("/\sin-/i"," In-",$new);
+                  $new = preg_replace("/(\s|\"|\'){1}(ph){1}(\s|,|\.|\"|\'|:|!|\?|\*|$){1}/ie","'\\1pH\\3'",$new);
+                  $new = preg_replace("/^ph(\s|$)/i","pH ",$new);
+                  $new = preg_replace("/(\s)ph($)/i"," pH",$new);
+                  $new = preg_replace("/(\s|\"|\'){1}(&){1}(\s|,|\.|\"|\'|:|!|\?|\*){1}/ie","'\\1and\\3'",$new);
+                  $new = preg_replace("/(\s|\"|\'){1}(groundwater){1}(\s|,|\.|\"|\'|:|!|\?|\*){1}/e","'\\1Ground Water\\3'",$new);
+                  $new = preg_replace("/(\W|^){1}(cross){1}(\s){1}(connection){1}(\W|$){1}/ie","'\\1\\2-\\4\\5'",$new); //always hyphonate cross-connections
+                  $new = preg_replace("/(\s|\"|\'){1}(vs\.){1}(\s|,|\.|\"|\'|:|!|\?|\*){1}/ie","'\\1Vs.\\3'",$new);
+                  $new = preg_replace("/(\s|\"|\'){1}(on-off){1}(\s|,|\.|\"|\'|:|!|\?|\*){1}/ie","'\\1On-Off\\3'",$new);
+                  $new = preg_replace("/(\s|\"|\'){1}(on-site){1}(\s|,|\.|\"|\'|:|!|\?|\*){1}/ie","'\\1On-Site\\3'",$new);
+                  // special cases like Class A Fires
+                  $new = preg_replace("/(\s|\"|\'){1}(class\s){1}(\w){1}(\s|,|\.|\"|\'|:|!|\?|\*|$){1}/ie","'\\1\\2'.strtoupper('\\3').'\\4'",$new);
+                  $new = stripslashes($new);
+                  $string_array[$k] = $new;
             }
-          }
-          //3.) do not allow upper case appostraphies
-          $new = preg_replace("/(\w'S)/ie","''.strtolower('\\1').''",$new);
-          $new = preg_replace("/(\w'\w)/ie","''.strtolower('\\1').''",$new);
-          $new = preg_replace("/(\W)(of|a|an|the|but|or|not|yet|at|on|in|over|above|under|below|behind|next to| beside|by|amoung|between|by|till|since|durring|for|throughout|to|and)(\W)/ise","'\\1'.strtolower('\\2').'\\3'",$new);
-          //4.) capitalize first letter in the string always
-            $new = preg_replace("/(^[a-z]){1}/ie","''.strtoupper('\\1').''", $new);
-            //5.) replace special cases
-          // you will add to this as you find case specific problems
-            $new = preg_replace("/\sin-/i"," In-",$new);
-            $new = preg_replace("/(\s|\"|\'){1}(ph){1}(\s|,|\.|\"|\'|:|!|\?|\*|$){1}/ie","'\\1pH\\3'",$new);
-            $new = preg_replace("/^ph(\s|$)/i","pH ",$new);
-            $new = preg_replace("/(\s)ph($)/i"," pH",$new);
-            $new = preg_replace("/(\s|\"|\'){1}(&){1}(\s|,|\.|\"|\'|:|!|\?|\*){1}/ie","'\\1and\\3'",$new);
-            $new = preg_replace("/(\s|\"|\'){1}(groundwater){1}(\s|,|\.|\"|\'|:|!|\?|\*){1}/e","'\\1Ground Water\\3'",$new);
-            $new = preg_replace("/(\W|^){1}(cross){1}(\s){1}(connection){1}(\W|$){1}/ie","'\\1\\2-\\4\\5'",$new); //always hyphonate cross-connections
-            $new = preg_replace("/(\s|\"|\'){1}(vs\.){1}(\s|,|\.|\"|\'|:|!|\?|\*){1}/ie","'\\1Vs.\\3'",$new);
-            $new = preg_replace("/(\s|\"|\'){1}(on-off){1}(\s|,|\.|\"|\'|:|!|\?|\*){1}/ie","'\\1On-Off\\3'",$new);
-            $new = preg_replace("/(\s|\"|\'){1}(on-site){1}(\s|,|\.|\"|\'|:|!|\?|\*){1}/ie","'\\1On-Site\\3'",$new);
-            // special cases like Class A Fires
-            $new = preg_replace("/(\s|\"|\'){1}(class\s){1}(\w){1}(\s|,|\.|\"|\'|:|!|\?|\*|$){1}/ie","'\\1\\2'.strtoupper('\\3').'\\4'",$new);
-            $new = stripslashes($new);
-            $string_array[$k] = $new;
-         }
-      }
-      for ($k=0; $k<count($string_array); $k++) {
-         $newString .= $string_array[$k];
-      }
-      return($newString);
+        }
+        for ($k=0; $k<count($string_array); $k++) {
+          $newString .= $string_array[$k];
+        }
+        return($newString);
     }
 
     function regexValidation($input, $expected, $referenceName) { // Tests to see if entered fields adhere to expected formats.  NOTE:  Required fields already exist, so we don't have to check for required state.
       global $errorMessage;
       if(strlen($input) > 0 && !preg_match($expected, $input)) {
-        $errorMessage .= "*The $referenceName you entered does not appear to be valid.<br />";
+        $errorMessage .= "*The $referenceName you entered does not appear to be valid.<br />"; // $referenceName should be dynamically read.
         return false;
       }
       return true;
