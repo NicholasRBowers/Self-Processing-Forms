@@ -1,13 +1,19 @@
 <?php
 
   /* GOALS & NOTES:
-    *Automated data collection
-      *MySQL integration
-      *Google Sheets (Spreadsheet) integration
-      *Data encryption
-    *Would prefer to define many configuration variables locally in the first IF statement to improve page-rendering performance, but not sure how to do that without making the code look complicated and overwhelming.
-    *Currently using IDs as hooks to style contact forms via CSS. Is this best practice?
-    *Need to make the validation area dynamic now, considering that the forms are now variable.
+    * ENHANCEMENT - Automated data collection
+        * MySQL integration
+        * Google Sheets (Spreadsheet) integration
+        * Data encryption
+    * ENHANCEMENT - Need to make the validation area dynamic now, considering that the forms are now variable.
+    * ENHANCEMENT - Add the capability of sending HTML content messages to customers (may already work).
+    * ENHANCEMENT - Timestamps.
+
+    * BEST PRACTICE - Google Analytics - Users are redirected to the same page, whether or not the outcome is default, success, or failure.  There is currently no way of delineating this behavior when it comes to tracking via Google Analytics.  How do we incorporate this?
+    * BEST PRACTICE - Currently using IDs as hooks to style contact forms via CSS. Is this best practice?
+
+    * PERFORMANCE - Would prefer to define many configuration variables locally in the first IF statement to improve page-rendering performance, but not sure how to do that without making the code look complicated and overwhelming.
+    * PERFORMANCE - Contemplating using just ucwords() function to replace the titleCase() function.
   */
 
 
