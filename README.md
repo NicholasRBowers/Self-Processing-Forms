@@ -1,10 +1,11 @@
 Self-Aware PHP Form
 ===================
--------------------------------------
-Original Author: **@NicholasRBowers**
--------------------------------------
+---------------------------------------------------------------------------
 
+Original Author: **[@NicholasRBowers](http://twitter.com/NicholasRBowers)**
 *A PHP contact form that processes itself.  That's right, one file.*
+
+---------------------------------------------------------------------------
 
 Objective
 ---------
@@ -20,17 +21,17 @@ The user stays on the current page, which makes for a much better user experienc
 
 Security Consideration
 ----------------------
-Some people put their backend PHP files outside of the webroot.  This is not necessary if the PHP form doesn't handle any sensitive/encrypted information.  Plus, it's open source, and on the web, so it's not like they can't look at the base files anyways.
+Some people put their backend PHP files outside of the webroot.  This is not necessary if the PHP form doesn't handle or contain any sensitive/encrypted information. If sensitive information must be handled, place this information in a different PHP file outside of the webroot, and include the contents within the contact-form.php file.
 
 Changelog
 --------
 ***Recent changes***
-*Restructured file to make configuration more clear.
-*Made script more adaptable, able to handle any number of forms.
-*Able to specify which form fields are required when declared.
-*Dynamic form construction based on configured forms within the script.
-*Code cleanup.
-*Exhaustive commenting.
+* Restructured file to make configuration more clear.
+* Made script more adaptable, able to handle any number of forms.
+* Able to specify which form fields are required when declared.
+* Dynamic form construction based on configured forms within the script.
+* Code cleanup.
+* Exhaustive commenting.
 
 **Development released October 17, 2012**
-*Initial release
+* Initial release
