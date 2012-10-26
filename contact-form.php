@@ -1,7 +1,10 @@
 <?php
 
   /* GOALS & NOTES:
-    *Find a way to incorporate storing (encrypted?) of collected user contact information in MySQL databases.
+    *Automated data collection
+      *MySQL integration
+      *Google Sheets (Spreadsheet) integration
+      *Data encryption
     *Would prefer to define many configuration variables locally in the first IF statement to improve page-rendering performance, but not sure how to do that without making the code look complicated and overwhelming.
     *Currently using IDs as hooks to style contact forms via CSS. Is this best practice?
     *Need to make the validation area dynamic now, considering that the forms are now variable.
@@ -13,7 +16,7 @@
       $formTitle = 'Free Estimate/Information Request Form';
       $inputFields = array(
         // Which fields do you want the contact form to include?
-        // FORMAT: array(referenceKey, Display Name, fieldType, isRequired?),
+        // FORMAT: array(referenceKey (no spaces), Display Name, fieldType, isRequired?),
         array('name', 'Name', 'text', true),
         array('phone', 'Phone Number', 'text', true),
         array('email', 'Email Address', 'text', false),
@@ -26,53 +29,54 @@
       $businessName = 'Example Business Name';
       $businessWebsite = 'http://example.com';
       $businessFacebook = 'http://www.facebook.com/ExampleURL';
-      $businessEmail = 'info@example.com'; // The verification message to the customer comes from this address.
+      $businessEmail = 'info@example.com'; // The verification email that the customer recieves, comes from this address.
       $canReply = true; // UNIMPLEMENTED - This setting allows the customer to reply to this email address.
 
     // Email contact configuration:
       $contactEmails = 'info@example.com, boss@example.com'; // The customer's message is sent to these email addresses.
-      $emailSubjectInformation = "$businessName's Contact Form Information";
-      $emailSubjectVerification = "$businessName's Contact Form Verification";
-      $emailBodyVerification = "Thank you for contacting $businessName! This is an automatically generated email to verify that we have received your information. A copy of your information is included below. We will contact you as soon as possible to answer your questions or address your concerns. In the meantime, please visit our Facebook ($businessFacebook) and website ($businessWebsite) to see what's new at $businessName! Have a great day!\n\n";
+      $emailSubjectInformation = "$businessName's Contact Form Information"; // Subject line for the email sent to the business.
+      $emailSubjectVerification = "$businessName's Contact Form Verification"; // Subject line for the email sent to the customer.
+      $emailBodyVerification = "Thank you for contacting $businessName! This is an automatically generated email to verify that we have received your information. A copy of your information is included below. We will contact you as soon as possible to answer your questions or address your concerns. In the meantime, please visit our Facebook ($businessFacebook) and website ($businessWebsite) to see what's new at $businessName! Have a great day!\n\n"; // Body of the email sent to the customer.
 
-    // Default dynamic content
-      $defaultContent = "
-        <h2>
-          Contact $businessName
-        </h2>
-        <p>
-          You can use the information below to contact <strong><em>$businessName</em></strong> to find out more information about what we do, or to receive a free estimate on a project you may want to get started on. Our project specialists are ready to help you.
-        </p>";
+    // Dynamic content - this is the content that is written above the form.  This content changes depending on actions from the customer.  If the customer is just visiting the page (hasn't submitted the form yet), they will see the default content; if the customer successfully submitted the form, they will see the success content; if the customer submitted the form with errors, they will see the failure content.
+      // Default dynamic content
+        $defaultContent = "
+          <h2>
+            Contact $businessName
+          </h2>
+          <p>
+            You can use the information below to contact <strong><em>$businessName</em></strong> to find out more information about what we do, or to receive a free estimate on a project you may want to get started on. Our project specialists are ready to help you.
+          </p>";
 
-    // Success dynamic content
-      $successContent = "
-        <h2>
-          Success!
-        </h2>
-        <p>
-          Your information has been sent! We will contact you as soon as possible. If you provided an email, a verification email has been sent containing the information you submitted.
-        </p>
-        <p>
-          While you wait for us to contact you to answer your questions, address your concerns, or give you a free estimate, please take a second to check out our <a href=\"$businessFacebook\" target=\"blank\">Facebook</a> to see what's new at $businessName!
-        </p>";
+      // Success dynamic content
+        $successContent = "
+          <h2>
+            Success!
+          </h2>
+          <p>
+            Your information has been sent! We will contact you as soon as possible. If you provided an email, a verification email has been sent containing the information you submitted.
+          </p>
+          <p>
+            While you wait for us to contact you to answer your questions, address your concerns, or give you a free estimate, please take a second to check out our <a href=\"$businessFacebook\" target=\"blank\">Facebook</a> to see what's new at $businessName!
+          </p>";
 
-    // Failure dynamic content
-      function failureContent($errors='We\'re sorry for the inconvenience. Please try again.') {
-        $failureContent = "
-        <h2>
-          Oops... Something went wrong!
-        </h2>
-        <p>
-          We are very sorry, but there seems to be error(s) in the information you've provided below. Please fix these errors and resubmit the form. Thanks!
-        </p>
-        <h3>
-          Error(s):
-        </h3>
-        <p>
-          $errors
-        </p>";
-        return $failureContent;
-      }
+      // Failure dynamic content
+        function failureContent($errors='We\'re sorry for the inconvenience. Please try again.') {
+          $failureContent = "
+          <h2>
+            Oops... Something went wrong!
+          </h2>
+          <p>
+            We are very sorry, but there seems to be error(s) in the information you've provided below. Please fix these errors and resubmit the form. Thanks!
+          </p>
+          <h3>
+            Error(s):
+          </h3>
+          <p>
+            $errors
+          </p>";
+          return $failureContent;
+        }
 
   //====================================================
 
