@@ -1,5 +1,5 @@
-Self-Aware PHP Form
-===================
+Self-Processing Contact Form
+============================
 *A PHP contact form that processes itself.  That's right, one file.*
 
 ---------------------------------------------------------------------------
