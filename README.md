@@ -1,5 +1,5 @@
 Self-Processing Forms
-============================
+=====================
 *A set of PHP forms that process themselves. One file, ready to `<? include ?>`.*
 
 ---------------------------------------------------------------------------
@@ -33,13 +33,13 @@ Features
 * Does not use any JavaScript for validation or otherwise.
 * Remembers the user's recent information via cookies, and populates applicable fields.
 
-* Contact Form
+* Contact Form  
     * Sends HTML-enabled E-mail.
     * Stores user information in a configured MySQL database.
     * Fulfills email standards (RFC 2822, etc.).
     * Built-in validation of user-provided form data (`_POST` data).
 
-* Login Form
+* Login Form  
     * Works with encrypted MySQL databases populated with user/pass pairs.
 
 Security Consideration
@@ -49,7 +49,7 @@ Some web-developers put their back-end PHP files outside of the web-root.  This 
 Changelog
 ---------
 ***Recent changes***
-* Contact Form
+* Contact Form  
     * Restructured file to make configuration more clear.
     * Made script more adaptable, able to handle any number of forms.
     * Able to specify which form fields are required when declared.
@@ -57,7 +57,7 @@ Changelog
     * Code cleanup.
     * Exhaustive commenting.
 
-* Login Form
+* Login Form  
     * Nothing yet.
 
 **Development released October 17, 2012**
