@@ -50,7 +50,7 @@ Changelog
 ---------
 ### Recent changes ###
 
-**Contact Form**
+#### Contact Form ####
 * Restructured file to make configuration more clear.
 * Made script more adaptable, able to handle any number of forms.
 * Able to specify which form fields are required when declared.
@@ -58,7 +58,7 @@ Changelog
 * Code cleanup.
 * Exhaustive commenting.
 
-**Login Form**
+#### Login Form ####
 * Nothing yet.
 
 ### Development released October 17, 2012 ###
