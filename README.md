@@ -34,13 +34,13 @@ Features
 * Remembers the user's recent information via cookies, and populates applicable fields.
 
 * Contact Form
-		* Sends HTML-enabled E-mail.
-		* Stores user information in a configured MySQL database.
-		* Fulfills email standards (RFC 2822, etc.).
-		* Built-in validation of user-provided form data (`_POST` data).
+    * Sends HTML-enabled E-mail.
+    * Stores user information in a configured MySQL database.
+    * Fulfills email standards (RFC 2822, etc.).
+    * Built-in validation of user-provided form data (`_POST` data).
 
 * Login Form
-		* Works with encrypted MySQL databases populated with user/pass pairs.
+    * Works with encrypted MySQL databases populated with user/pass pairs.
 
 Security Consideration
 ----------------------
@@ -50,15 +50,15 @@ Changelog
 ---------
 ***Recent changes***
 * Contact Form
-		* Restructured file to make configuration more clear.
-		* Made script more adaptable, able to handle any number of forms.
-		* Able to specify which form fields are required when declared.
-		* Dynamic form construction based on configured forms within the script.
-		* Code cleanup.
-		* Exhaustive commenting.
+    * Restructured file to make configuration more clear.
+    * Made script more adaptable, able to handle any number of forms.
+    * Able to specify which form fields are required when declared.
+    * Dynamic form construction based on configured forms within the script.
+    * Code cleanup.
+    * Exhaustive commenting.
 
 * Login Form
-		* Nothing yet.
+    * Nothing yet.
 
 **Development released October 17, 2012**
 * Development started - working towards stable release.
