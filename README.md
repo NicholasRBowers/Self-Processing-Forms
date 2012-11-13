@@ -23,13 +23,16 @@ The user stays on the current page, which makes for a much better user experienc
 Overview
 --------
 * Utilizes PHP technology to self-process customer information.
+* Sanitizes user input values to protect from hacker attacks.
+* Stores user information in a configured MySQL database.
 * Does not use any JavaScript for validation or otherwise.
 * Fulfills email standards (RFC 2822, etc.).
 * Built-in validation of user-provided form data (`_POST` data).
+* Remembers the user's last submitted contact information via cookies.
 
 Security Consideration
 ----------------------
-Some web-developers put their back-end PHP files outside of the web-root.  This is not necessary if the PHP form doesn't handle or contain any sensitive/encrypted information. If sensitive information must be handled, place this information in a different PHP file outside of the web-root, and include the contents within the contact-form.php file.
+Some web-developers put their back-end PHP files outside of the web-root.  This is not necessary if the PHP form doesn't handle or contain any sensitive/encrypted information. If sensitive information must be handled, place this information in a different PHP file outside of the web-root, and include the contents within the contact-form.php file.  All user data that comes from forms are sanitized before processing, to ensure that users can't escape the PHP, and force an error to occur, thus displaying some of the back-end PHP code in their browser.
 
 Changelog
 ---------
