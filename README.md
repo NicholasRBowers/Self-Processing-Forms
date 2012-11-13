@@ -46,11 +46,9 @@ Security Consideration
 ----------------------
 Some web-developers put their back-end PHP files outside of the web-root.  This is not necessary if the PHP form doesn't handle or contain any sensitive/encrypted information. If sensitive information must be handled, place this information in a different PHP file outside of the web-root, and include the contents within the contact-form.php file.  All user data that comes from forms are sanitized before processing, to ensure that users can't escape the PHP, and force an error to occur, thus displaying some of the back-end PHP code in their browser.
 
-Changelog
----------
-### Recent changes ###
-
-#### Contact Form ####
+Changelog - What's New?
+-----------------------
+**Contact Form**
 * Restructured file to make configuration more clear.
 * Made script more adaptable, able to handle any number of forms.
 * Able to specify which form fields are required when declared.
@@ -58,7 +56,7 @@ Changelog
 * Code cleanup.
 * Exhaustive commenting.
 
-#### Login Form ####
+**Login Form**
 * Nothing yet.
 
 ### Development released October 17, 2012 ###
