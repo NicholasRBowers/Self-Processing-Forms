@@ -31,14 +31,12 @@ Features
 * Sanitizes user input values to protect from hacker attacks.
 * Utilizes PHP technology to self-process user information.
 * Does not use any JavaScript for validation or otherwise.
-* Remembers the user's recent information via cookies, and populates applicable fields.
-
+* Remembers the user's recent information via cookies, and populates applicable fields.  
 * Contact Form  
     * Sends HTML-enabled E-mail.
     * Stores user information in a configured MySQL database.
     * Fulfills email standards (RFC 2822, etc.).
-    * Built-in validation of user-provided form data (`_POST` data).
-
+    * Built-in validation of user-provided form data (`_POST` data).  
 * Login Form  
     * Works with encrypted MySQL databases populated with user/pass pairs.
 
@@ -49,15 +47,14 @@ Some web-developers put their back-end PHP files outside of the web-root.  This 
 Changelog
 ---------
 ***Recent changes***
-* Contact Form  
+* Contact Form
     * Restructured file to make configuration more clear.
     * Made script more adaptable, able to handle any number of forms.
     * Able to specify which form fields are required when declared.
     * Dynamic form construction based on configured forms within the script.
     * Code cleanup.
-    * Exhaustive commenting.
-
-* Login Form  
+    * Exhaustive commenting.  
+* Login Form
     * Nothing yet.
 
 **Development released October 17, 2012**
