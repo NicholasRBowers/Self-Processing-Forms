@@ -1,6 +1,6 @@
 Self-Processing Contact Form
 ============================
-*A PHP contact form that processes itself.  That's right, one file.*
+*A PHP contact form that processes itself. One file, ready to `<? include ?>`.*
 
 ---------------------------------------------------------------------------
 
