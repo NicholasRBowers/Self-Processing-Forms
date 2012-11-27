@@ -63,7 +63,7 @@
       $businessEmail = 'info@example.com'; // The verification email that the visitor receives, comes from this address.
       
       $canReply = true; // This setting allows the visitor to reply to this email address.
-      $enableHTML = true; // This setting enables HTML in the outgoing emails.
+      $enableHTML = false; // This setting enables HTML in the outgoing emails.
 
     //---------------------------------------------------------------
     
@@ -111,7 +111,7 @@
           <p>
             We are very sorry, but there seems to be error(s) in the information you've provided below. Please fix these errors and resubmit the form. Thanks!
           </p>
-          <h3>
+          <h3 class=\"error\">
             Error(s):
           </h3>
           <p>
@@ -243,27 +243,27 @@
         // Construct the headers
           $headers = '';
           if ($enableHTML === true) {
-            $headers = "MIME-Version: 1.0\r\nContent-type: text/html; charset=utf-8\r\n";
+            $headers = "MIME-Version: 1.0\r\nContent-type: text/html; charset=utf-8\r\nFrom: $businessName <$businessEmail>";
+          } else {
+            $headers = "From: $businessName <$businessEmail>";
           }
           $headersInformation = $headers;
-          $headersInformation .= htmlentities("From: $businessName <$businessEmail>\r\n");
           if (strlen($inputEmail) > 0) {
-            $headersInformation .= htmlentities("Reply-To: $inputName <$inputEmail>\r\n");
+            $headersInformation .= "\r\nReply-To: $inputName <$inputEmail>";
           }
           $headersVerification = $headers;
-          $headersVerification .= htmlentities("From: $businessName <$businessEmail>\r\n");
           if ($canReply === true) {
-            $headersVerification .= htmlentities("Reply-To: $businessName <$businessEmail>");
+            $headersVerification .= "\r\nReply-To: $businessName <$businessEmail>";
           } else {
-            $headersVerification .= "Reply-To:";
+            $headersVerification .= "\r\nReply-To:";
           }
 
         // Send information email to business
-          $informationSuccess = mail($contactEmails, $emailSubjectInformation, $emailBodyInformation, $headersInformation);
+          $informationSuccess = mail($contactEmails, $emailSubjectInformation, $emailBodyInformation, $headersInformation, "-f $businessName <$businessEmail>");
 
         // Send verification email to visitor
           if (strlen($inputEmail) > 0) {
-            mail($inputEmail, $emailSubjectVerification, $emailBodyVerification, $headersVerification);
+            mail($inputEmail, $emailSubjectVerification, $emailBodyVerification, $headersVerification, "-f $businessName <$businessEmail>");
           }
 
         // Appends the dynamic content to the $content variable
