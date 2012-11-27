@@ -205,9 +205,11 @@
           // FORMAT: regexValidation($input, $expected, $referenceName)
           regexValidation($inputName, $expectedName, 'name');
           regexValidation($inputPhone, $expectedPhone, 'phone number');
-          $emailValidation = regexValidation($inputEmail, $expectedEmail, 'email address');
-          if($emailValidation && !filter_var($inputEmail, FILTER_VALIDATE_EMAIL)) { // Built-in fall-back check.
-            $errorMessage .= '*The email address you entered does not appear to be valid.<br />';
+          if (strlen($inputEmail) > 0) { // If $inputEmail fails this test, then the email address is not required.
+            $emailValidation = regexValidation($inputEmail, $expectedEmail, 'email address');
+            if($emailValidation && !filter_var($inputEmail, FILTER_VALIDATE_EMAIL)) { // Built-in fall-back check.
+              $errorMessage .= '*The email address you entered does not appear to be valid.<br />';
+            }
           }
           if (strlen($inputMessage) < 3) {
             $errorMessage .= '*You didn\'t tell us how we can help you.<br />';
