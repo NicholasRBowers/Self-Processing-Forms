@@ -2,11 +2,11 @@
 
   /* GOALS & NOTES:
     * ENHANCEMENT - Need to make the validation area dynamic now, considering that the forms are now variable (lines 176, 189, and 214).
-    * ENHANCEMENT - Automated data collection
-        * MySQL integration
-        * Google Sheets (Spreadsheet) integration
-        * Data encryption
-    * ENHANCEMENT - Add the capability of sending HTML content messages to customers (may already work).
+    * ENHANCEMENT - Automated data collection.
+        * MySQL integration.
+        * Google Sheets (Spreadsheet) integration.
+        * Data encryption.
+    * ENHANCEMENT - Add the capability of sending HTML content messages to visitors (may already work).
     * ENHANCEMENT - Timestamps.
 
     * BEST PRACTICE - Google Analytics - Users are redirected to the same page, whether or not the outcome is default, success, or failure.  There is currently no way of delineating this behavior when it comes to tracking via Google Analytics.  How do we incorporate this?
@@ -14,13 +14,29 @@
 
     * PERFORMANCE - Would prefer to define many configuration variables locally in the first IF statement to improve page-rendering performance, but not sure how to do that without making the code look complicated and overwhelming.
     * PERFORMANCE - Contemplating using just ucwords() function to replace the titleCase() function.
+
+    * PRESENTATION - Use OOP model to organize preferences, or perhaps XML or EOF for data/HTML sections?
+        Example:
+          <?php
+          $str = <<< XML
+          <?xml version="1.0"?>
+          <shapes>
+            <shape type="circle" radius="2" />
+            <shape type="rectangle" length="5" width="2" />
+            <shape type="square" length="7" />
+          </shapes>
+
+          XML;
+          ?>
   */
 
 
   // SETTINGS ====================================================================================================
     
     // CONTACT FORM CONFIGURATION:
-      $formTitle = 'Free Estimate/Information Request Form';
+      $formTitle = 'Contact us today for more information!';
+      $successTitle = 'Success!';
+      $failureTitle = 'Oops... Something went wrong!';
       
       $inputFields = array(
         // Which fields do you want the contact form to include?
@@ -44,51 +60,53 @@
       $businessName = 'Example Business Name';
       $businessWebsite = 'http://example.com';
       $businessFacebook = 'http://www.facebook.com/ExampleURL';
-      $businessEmail = 'info@example.com'; // The verification email that the customer receives, comes from this address.
+      $businessEmail = 'info@example.com'; // The verification email that the visitor receives, comes from this address.
       
-      $canReply = true; // UNIMPLEMENTED - This setting allows the customer to reply to this email address.
+      $canReply = true; // This setting allows the visitor to reply to this email address.
+      $enableHTML = true; // This setting enables HTML in the outgoing emails.
 
     //---------------------------------------------------------------
     
     // EMAIL CONTACT CONFIGURATION:
-      $contactEmails = 'info@example.com, boss@example.com'; // The customer's message is sent to these email addresses.
+      $contactEmails = 'info@example.com, boss@example.com'; // The visitor's message is sent to these email addresses.
       $emailSubjectInformation = "$businessName's Contact Form Information"; // Subject line for the email sent to the business.
-      $emailSubjectVerification = "$businessName's Contact Form Verification"; // Subject line for the email sent to the customer.
+      $emailSubjectVerification = "$businessName's Contact Form Verification"; // Subject line for the email sent to the visitor.
       
-      $emailBodyVerification = "Thank you for contacting $businessName! This is an automatically generated email to verify that we have received your information. A copy of your information is included below. We will contact you as soon as possible to answer your questions or address your concerns. In the meantime, please visit our Facebook ($businessFacebook) and website ($businessWebsite) to see what's new at $businessName! Have a great day!\n\n"; // Body of the email sent to the customer.
+      $emailBodyVerification = "Thank you for contacting $businessName! This is an automatically generated email to verify that we have received your information. A copy of your information is included below. We will contact you as soon as possible to answer your questions or address your concerns. In the meantime, please visit our Facebook ($businessFacebook) and website ($businessWebsite) to see what's new at $businessName! Have a great day!\n\n"; // Body of the email sent to the visitor.
 
     //---------------------------------------------------------------
 
-    // Dynamic content - this is the content that is written above the form.  This content changes depending on actions from the customer.  If the customer is just visiting the page (hasn't submitted the form yet), they will see the default content; if the customer successfully submitted the form, they will see the success content; if the customer submitted the form with errors, they will see the failure content.
+    // Dynamic content - this is the content that is written above the form.  This content changes depending on actions from the visitor.  If the visitor is just visiting the page (hasn't submitted the form yet), they will see the default content; if the visitor successfully submitted the form, they will see the success content; if the visitor submitted the form with errors, they will see the failure content.
       
       // Default dynamic content
         $defaultContent = "
           <h2>
-            Contact $businessName
-          </h2>
-          <p>
-            You can use the information below to contact <strong><em>$businessName</em></strong> to find out more information about what we do, or to receive a free estimate on a project you may want to get started on. Our project specialists are ready to help you.
-          </p>";
-
+            $formTitle
+          </h2>";
       
+
       // Success dynamic content
         $successContent = "
           <h2>
-            Success!
+            $successTitle
           </h2>
           <p>
             Your information has been sent! We will contact you as soon as possible. If you provided an email, a verification email has been sent containing the information you submitted.
           </p>
           <p>
-            While you wait for us to contact you to answer your questions, address your concerns, or give you a free estimate, please take a second to check out our <a href=\"$businessFacebook\" target=\"blank\">Facebook</a> to see what's new at $businessName!
-          </p>";
+            While you wait for us to get back to you regarding your questions, please take a second to check out our <a href=\"$businessFacebook\" target=\"blank\">Facebook</a> to see what's new at $businessName!
+          </p>
+          <h2>
+            Another Question? Don't be shy!
+          </h2>";
 
       
       // Failure dynamic content
         function failureContent($errors='We\'re sorry for the inconvenience. Please try again.') {
+          global $failureTitle;
           $failureContent = "
           <h2>
-            Oops... Something went wrong!
+            $failureTitle
           </h2>
           <p>
             We are very sorry, but there seems to be error(s) in the information you've provided below. Please fix these errors and resubmit the form. Thanks!
@@ -114,7 +132,7 @@
 
 
   // Initialization
-    $content = '<div id="contactdynamic">';
+    $content = '<div id="contact-dynamic">';
     $errorMessage = '';
     $generatedForms = '';
     $requiredFields = array();
@@ -145,10 +163,7 @@
     }
     $contactForm = "
 
-      <div id=\"contactform\">
-        <h3>
-          $formTitle
-        </h3>
+      <div id=\"contact-form\">
         <form method=\"post\" action=\"{$_SERVER['PHP_SELF']}\">
           $generatedForms
         </form>
@@ -202,14 +217,15 @@
             break; // Break out of do-while(0) loop.
           }
 
-        // Log data into a database
-          // if database variables are set
-            //do { // Will breaking out of this do-while(0) loop break out of both of them?
-              //$connection = mysql_connect($server, $user, $pass) or break;
-              //mysql_select_db($db, $connection) or break;
-              //$query = "INSERT";
-              //mysql_close($connection);
-            //} while (0);
+        /*// Log data into a database
+          if database variables are set
+            do { // Will breaking out of this do-while(0) loop break out of both of them?
+              $connection = mysql_connect($server, $user, $pass) or break;
+              mysql_select_db($db, $connection) or break;
+              $query = "INSERT";
+              mysql_close($connection);
+            } while (0);
+        */
 
         // Prepare email body information text - NEEDS TO BE DYNAMIC
           $emailBodyInformation = "-Form details-\n";
@@ -225,15 +241,27 @@
           }
 
         // Construct the headers
-          $headersInformation = "From: $businessName <$businessEmail>\r\n";
-          $headersInformation .= "Reply-To: $inputName <$inputEmail>\r\n";
-          $headersVerification = "From: $businessName <$businessEmail>\r\n";
-          $headersVerification .= "Reply-To: $businessName <$businessEmail>";
+          $headers = '';
+          if ($enableHTML === true) {
+            $headers = "MIME-Version: 1.0\r\nContent-type: text/html; charset=utf-8\r\n";
+          }
+          $headersInformation = $headers;
+          $headersInformation .= htmlentities("From: $businessName <$businessEmail>\r\n");
+          if (strlen($inputEmail) > 0) {
+            $headersInformation .= htmlentities("Reply-To: $inputName <$inputEmail>\r\n");
+          }
+          $headersVerification = $headers;
+          $headersVerification .= htmlentities("From: $businessName <$businessEmail>\r\n");
+          if ($canReply === true) {
+            $headersVerification .= htmlentities("Reply-To: $businessName <$businessEmail>");
+          } else {
+            $headersVerification .= "Reply-To:";
+          }
 
         // Send information email to business
           $informationSuccess = mail($contactEmails, $emailSubjectInformation, $emailBodyInformation, $headersInformation);
 
-        // Send verification email to customer
+        // Send verification email to visitor
           if (strlen($inputEmail) > 0) {
             mail($inputEmail, $emailSubjectVerification, $emailBodyVerification, $headersVerification);
           }
@@ -258,7 +286,8 @@
 
   // Helper functions
     function prepareString($string) { // Prepares the $string for processing by the script
-      $newString = stripslashes($string);
+      $newString = htmlentities($string);
+      $newString = stripslashes($newString);
       $newString = trim($newString);
       $bad = array('content-type','bcc:','to:','cc:','href');
       $newString = str_replace($bad,'',$newString);
